@@ -2,21 +2,48 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HANGAR 動画撮影マップ</title>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCFsUzLKS7z-n6zAYK7gXf-mm6iVXGrT1A&libraries=places" async defer></script>
     <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        h2, p {
+            margin: 16px;
+        }
+
         #map {
             width: 100%;
-            height: 800px;
-            min-height: 500px;
+            height: 60vh;
+            min-height: 300px;
             background-color: #e0e0e0;
-            position: relative;
         }
+
+        .info-window {
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: visible;
+        }
+
         .info-window iframe {
             width: 100%;
-            height: 200px;
+            height: 30vh;
+            max-height: 250px;
             border: none;
-            cursor: pointer;
+            position: static;
+        }
+
+        @media (max-width: 600px) {
+            h2 {
+                font-size: 1.2em;
+            }
+
+            .info-window iframe {
+                height: 25vh;
+            }
         }
     </style>
 </head>
@@ -31,7 +58,7 @@
         let bounds;
         let infoWindow;
 
-        window.onload = function() {
+        window.onload = function () {
             console.log("🔄 Google Maps API のロードを確認");
             let checkGoogleMaps = setInterval(() => {
                 if (typeof google !== "undefined" && typeof google.maps !== "undefined") {
@@ -97,7 +124,7 @@
         }
 
         function convertYouTubeEmbed(url) {
-            if (!url) return "";
+            if (!url) return { embedUrl: "", originalUrl: "" };
 
             let videoId = "";
             let originalUrl = url.trim();
@@ -156,8 +183,8 @@
 
                 let { embedUrl, originalUrl } = convertYouTubeEmbed(facility["動画URL"]);
 
-                console.log("🎥 埋め込み動画URL: " + embedUrl);
-                console.log("🔗 元の動画URL: " + originalUrl);
+                console.log("🎥 埋め込み動画URL:", embedUrl);
+                console.log("🔗 元の動画URL:", originalUrl);
 
                 marker.addListener("click", function () {
                     if (infoWindow) {
@@ -166,14 +193,14 @@
 
                     infoWindow = new google.maps.InfoWindow({
                         content: `
-                            <div class="info-window" style="max-width: 300px; position: relative;">
-                                <h2>${facility["場所"] || "情報なし"}</h2>
+                            <div class="info-window">
+                                <h3>${facility["場所"] || "情報なし"}</h3>
                                 <p><strong>住所:</strong> ${facility["住所"] || "情報なし"}</p>
-                                <p>詳細: ${facility["説明"] || "情報なし"}</p>
-                                ${embedUrl ? `<iframe src="${embedUrl}" allowfullscreen></iframe>` : ""}
-                                <p>撮影日: ${facility["撮影日"] || "情報なし"}</p>
+                                <p>${facility["説明"] || ""}</p>
+                                ${embedUrl ? `<iframe src="${embedUrl}" allowfullscreen allow="fullscreen"></iframe>` : ""}
+                                <p><strong>撮影日:</strong> ${facility["撮影日"] || "情報なし"}</p>
                                 <p><a href="${originalUrl}" target="_blank">YouTubeで開く</a></p>
-                                <p><a href="https://maps.google.com/?q=${facility["住所"]}" target="_blank">Googleマップで開く</a></p>
+                                <p><a href="https://maps.google.com/?q=${encodeURIComponent(facility["住所"])}" target="_blank">Googleマップで開く</a></p>
                             </div>
                         `
                     });
